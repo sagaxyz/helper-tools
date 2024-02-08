@@ -1,0 +1,22 @@
+name: shfmt
+
+on: [push]
+
+permissions:
+ contents: read
+jobs:
+  shfmt:
+    name: Run shfmt
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: github.com/sagaxyz/*
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.22.2'
+      - uses: actions/checkout@v4
+      - name: Install shfmt
+        run: go install mvdan.cc/sh/v3/cmd/shfmt@latest
+      - name: Check Shell Script Formatting
+        run: find . -type f -name "*.sh" -exec shfmt -i 2 -ci -d {} +
