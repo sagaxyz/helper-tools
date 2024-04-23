@@ -75,4 +75,5 @@ sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:26657"' /opt/sscd/
 sudo -u sscdserviceuser tomlq -t '.pruning = "nothing"' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
 
 # start
+systemctl enable sscd.service
 systemctl start sscd
