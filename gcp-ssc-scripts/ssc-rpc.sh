@@ -48,6 +48,7 @@ After=network-online.target
 [Service]
 User=sscdserviceuser
 Group=sscdserviceuser
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 ExecStart=sscd start --home /opt/sscd/.ssc/
 StandardOutput=append:/var/log/sscd/sscd.log
 StandardError=append:/var/log/sscd/sscd_error.log
