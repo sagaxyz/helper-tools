@@ -1,3 +1,3 @@
 # internal-tools
 
-Hello
+This repo contains some internal tools, scripts etc.
