@@ -63,8 +63,8 @@ EOF
 # init ssc
 sudo -u sscdserviceuser HOME=/opt/sscd/ sscd init saganode --chain-id ssc-1
 
-# set persistent peers
-sudo -u sscdserviceuser sed -i 's/persistent_peers = ""/persistent_peers = "fe0a7c342c3ea6934b89f87a4e5d93ae02792243@195.14.6.50:26014,7b205854267901c355fc1a18908764c118431375@51.81.167.206:17300,054b42595365063100789a218070023bb749c156@66.172.36.135:11156,8abc9ea7ab1db58c26eae9b55344644893f64d49@66.172.36.136:11156,4318a1fafa158df21b98d28bf5ed529f79db57c7@95.216.38.96:11156"/g' /opt/sscd/.ssc/config/config.toml
+# set seeds
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "7a76f8c6d905325d6739711ed40399a501b1484b@34.107.32.74:26656,33d4f88adba9f2394a09f65401908a71352260fe@34.64.222.209:26656,084a2b4309d7ff273084671b9c9f6cffc6587131@34.174.56.202:26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/mainnet/main/genesis/genesis.json'
@@ -74,6 +74,19 @@ sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:80"' /opt/sscd/.ss
 
 # adjust app.toml
 sudo -u sscdserviceuser tomlq -t '."state-sync"."snapshot-interval" = 1000' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
+
+# obtain state sync actual data
+STATUS_URL=http://34.134.161.74
+CURRENT_BLOCK=$(curl -s $STATUS_URL/status | jq '.result.sync_info.latest_block_height'| awk 'gsub("\"","",$0)')
+TRUST_HEIGHT=$((CURRENT_BLOCK / 1000 * 1000 ))
+TRUST_BLOCK=$(curl -s $STATUS_URL/block\?height=$TRUST_HEIGHT)
+TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
+
+# configure state sync
+sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://34.107.32.74:26657,tcp://34.64.222.209:26657,tcp://34.174.56.202:26657"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # start
 systemctl enable sscd.service
