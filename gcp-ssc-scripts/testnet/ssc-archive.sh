@@ -86,11 +86,17 @@ TRUST_HEIGHT=$((CURRENT_BLOCK / 1000 * 1000 ))
 TRUST_BLOCK=$(curl -s $RPC_URL/block\?height=$TRUST_HEIGHT)
 TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
 
+# define state sync nodes
+# for testnet we do not have dedicated state sync nodes atm so use seeds instead
+SSYNC_NODE_EU=$SEED_NODE_EU
+SSYNC_NODE_US=$SEED_NODE_US
+SSYNC_NODE_KR=$SEED_NODE_KR
+
 # configure state sync
 sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SEED_NODE_EU':80,tcp://'$SEED_NODE_US':80,tcp://'$SEED_NODE_KR':80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SSYNC_NODE_EU':80,tcp://'$SSYNC_NODE_US':80,tcp://'$SSYNC_NODE_KR':80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # start
 systemctl enable sscd.service
