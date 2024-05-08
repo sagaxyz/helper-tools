@@ -4,8 +4,8 @@ set -e pipefail
 
 # if service exists, do nothing
 if systemctl list-units --full -all | grep -q 'sscd.service'; then
-   echo "Service exists."
-   exit 0
+  echo "Service exists."
+  exit 0
 fi
 
 # install dependencies
@@ -31,7 +31,6 @@ mkdir -p /opt/sscd
 chown -R sscdserviceuser:sscdserviceuser /opt/sscd
 mkdir -p /var/log/sscd
 chown -R sscdserviceuser:sscdserviceuser /var/log/sscd
-
 
 # install ssc
 sudo -u sscdserviceuser git clone -b v0.1.5 https://github.com/sagaxyz/ssc /tmp/ssc
@@ -69,21 +68,21 @@ SEED_NODE_US=testnet2-seed-us.sagarpc.io
 SEED_NODE_KR=testnet2-seed-kr.sagarpc.io
 
 # set seeds
-sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "225fe05150c80b44bc1ba92e67be7d0cdcfce8ad@'$SEED_NODE_EU':26656,7a4e03ea16d936864057af7daa83265d8167c9b1@'$SEED_NODE_US':26656,041df94facf03592bc5707676ca82550916efe5a@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "225fe05150c80b44bc1ba92e67be7d0cdcfce8ad@'$SEED_NODE_EU':26656,7a4e03ea16d936864057af7daa83265d8167c9b1@'$SEED_NODE_US':26656,041df94facf03592bc5707676ca82550916efe5a@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/testnet-2/main/genesis/genesis.json'
 
 # adjust config.toml
-sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # adjust app.toml
-sudo -u sscdserviceuser tomlq -t '."state-sync"."snapshot-interval" = 1000' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
+sudo -u sscdserviceuser tomlq -t '."state-sync"."snapshot-interval" = 1000' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
 
 # obtain state sync actual data
 RPC_URL=https://testnet2-keplr.sagarpc.io
-CURRENT_BLOCK=$(curl -s $RPC_URL/status | jq '.result.sync_info.latest_block_height'| awk 'gsub("\"","",$0)')
-TRUST_HEIGHT=$((CURRENT_BLOCK / 1000 * 1000 ))
+CURRENT_BLOCK=$(curl -s $RPC_URL/status | jq '.result.sync_info.latest_block_height' | awk 'gsub("\"","",$0)')
+TRUST_HEIGHT=$((CURRENT_BLOCK / 1000 * 1000))
 TRUST_BLOCK=$(curl -s $RPC_URL/block\?height=$TRUST_HEIGHT)
 TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
 
@@ -94,10 +93,10 @@ SSYNC_NODE_US=$SEED_NODE_US
 SSYNC_NODE_KR=$SEED_NODE_KR
 
 # configure state sync
-sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SSYNC_NODE_EU':80,tcp://'$SSYNC_NODE_US':80,tcp://'$SSYNC_NODE_KR':80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out > /dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SSYNC_NODE_EU':80,tcp://'$SSYNC_NODE_US':80,tcp://'$SSYNC_NODE_KR':80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # start
 systemctl enable sscd.service
