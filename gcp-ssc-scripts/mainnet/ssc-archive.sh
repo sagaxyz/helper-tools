@@ -78,23 +78,11 @@ sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:26657"' /opt/sscd/
 # adjust app.toml
 sudo -u sscdserviceuser tomlq -t '.pruning = "nothing"' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
 
-# obtain state sync actual data
-RPC_URL=https://ssc-rpc.sagarpc.io
-CURRENT_BLOCK=$(curl -s $RPC_URL/status | jq '.result.sync_info.latest_block_height' | awk 'gsub("\"","",$0)')
-TRUST_HEIGHT=$((CURRENT_BLOCK / 1000 * 1000))
-TRUST_BLOCK=$(curl -s $RPC_URL/block\?height=$TRUST_HEIGHT)
-TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
-
-# define state sync nodes
-SSYNC_NODE_EU=34.107.32.74
-SSYNC_NODE_US=34.174.56.202
-SSYNC_NODE_KR=34.64.222.209
-
-# configure state sync
-sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SSYNC_NODE_EU':26657,tcp://'$SSYNC_NODE_US':26657,tcp://'$SSYNC_NODE_KR':26657"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+# for archival node we need to get a snapshot
+sudo -u sscdserviceuser wget -O /opt/sscd/latest.tar.bz2 https://saga-snapshots-mainnet.s3.amazonaws.com/ssc/archive/latest.tar.bz2
+sudo -u sscdserviceuser tar -xvjf /opt/sscd/latest.tar.bz2 -C /opt/sscd/.ssc/
+sudo -u sscdserviceuser mv /opt/sscd/.ssc/root/ /opt/sscd/.ssc/
+sudo -u sscdserviceuser rm -f /opt/sscd/latest.tar.bz2
 
 # start
 systemctl enable sscd.service
