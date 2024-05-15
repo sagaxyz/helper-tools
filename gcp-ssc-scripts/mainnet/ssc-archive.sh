@@ -79,10 +79,10 @@ sudo -u sscdserviceuser tomlq -t '.rpc.laddr = "tcp://0.0.0.0:26657"' /opt/sscd/
 sudo -u sscdserviceuser tomlq -t '.pruning = "nothing"' /opt/sscd/.ssc/config/app.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/app.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/app.toml.out /opt/sscd/.ssc/config/app.toml
 
 # for archival node we need to get a snapshot
-sudo -u sscdserviceuser wget -O /opt/sscd/latest.tar.bz2 https://saga-snapshots-mainnet.s3.amazonaws.com/ssc/archive/latest.tar.bz2
-sudo -u sscdserviceuser tar -xvjf /opt/sscd/latest.tar.bz2 -C /opt/sscd/.ssc/
+sudo -u sscdserviceuser wget -O /opt/sscd/latest.tar https://saga-snapshots-mainnet.s3.amazonaws.com/ssc/archive/latest.tar
+sudo -u sscdserviceuser tar -xvf /opt/sscd/latest.tar -C /opt/sscd/.ssc/
 sudo -u sscdserviceuser mv /opt/sscd/.ssc/root/ /opt/sscd/.ssc/
-sudo -u sscdserviceuser rm -f /opt/sscd/latest.tar.bz2
+sudo -u sscdserviceuser rm -f /opt/sscd/latest.tar
 
 # start
 systemctl enable sscd.service
