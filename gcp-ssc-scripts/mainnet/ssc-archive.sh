@@ -67,7 +67,7 @@ SEED_NODE_US=ssc-seed-us.sagarpc.io
 SEED_NODE_KR=ssc-seed-kr.sagarpc.io
 
 # set seeds
-sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "7a76f8c6d905325d6739711ed40399a501b1484b@'$SEED_NODE_EU':26656,084a2b4309d7ff273084671b9c9f6cffc6587131@'$SEED_NODE_US':26656,33d4f88adba9f2394a09f65401908a71352260fe@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "98a9866c1a0728c117ea7ad579bed739dbb72b47@'$SEED_NODE_EU':26656,a367315c6319d55a9d17dfa13a96c19500bc6a02@'$SEED_NODE_US':26656,0c41e31ae643549107f57d4c9e29f7193f1a36e0@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/mainnet/main/genesis/genesis.json'
