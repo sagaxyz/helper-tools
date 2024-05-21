@@ -67,7 +67,7 @@ SEED_NODE_US=testnet2-seed-us.sagarpc.io
 SEED_NODE_KR=testnet2-seed-kr.sagarpc.io
 
 # set seeds
-sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "225fe05150c80b44bc1ba92e67be7d0cdcfce8ad@'$SEED_NODE_EU':26656,7a4e03ea16d936864057af7daa83265d8167c9b1@'$SEED_NODE_US':26656,041df94facf03592bc5707676ca82550916efe5a@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "0cec3c2ba9e3f5d01db08a48efa0b37daab10c88@'$SEED_NODE_EU':26656,1b18cc75bc5933c24c338b1c9979ea8fad967850@'$SEED_NODE_US':26656,51319e6a39735c95a85228684946e68b4f95c87a@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/testnet-2/main/genesis/genesis.json'
@@ -81,7 +81,7 @@ sudo -u sscdserviceuser tomlq -t '.pruning = "nothing"' /opt/sscd/.ssc/config/ap
 # for archival node we need to get a snapshot
 sudo -u sscdserviceuser wget -O /opt/sscd/latest.tar https://saga-snapshots-testnet.s3.amazonaws.com/ssc/archive/latest.tar
 sudo -u sscdserviceuser tar -xvf /opt/sscd/latest.tar -C /opt/sscd/.ssc/
-sudo -u sscdserviceuser mv /opt/sscd/.ssc/root/ /opt/sscd/.ssc/
+sudo -u sscdserviceuser mv /opt/sscd/.ssc/root/.ssc/data/* /opt/sscd/.ssc/data/
 sudo -u sscdserviceuser rm -f /opt/sscd/latest.tar
 
 # start
