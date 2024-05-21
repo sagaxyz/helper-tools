@@ -85,7 +85,7 @@ TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
 # define state sync nodes
 SSYNC_NODE_EU=35.198.81.158
 SSYNC_NODE_US=35.222.27.231
-SSYNC_NODE_KR=34.64.149.7
+SSYNC_NODE_KR=34.22.84.137
 
 # configure state sync
 sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
