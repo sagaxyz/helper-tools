@@ -14,8 +14,11 @@ apt upgrade -y
 apt install build-essential make wget git daemon jq python3-pip -y
 pip install yq
 
-wget https://golang.org/dl/go1.22.2.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz
+GO_VERSION="${GO_VERSION:-1.22.2}"
+SSC_VERSION="${SSC_VERSION:-v0.1.5}"
+
+wget https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz
+tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
 # shellcheck disable=SC2016
 # shellcheck disable=SC1091
 echo 'export PATH=$PATH:/usr/local/go/bin' | tee -a /etc/profile
@@ -33,7 +36,7 @@ mkdir -p /var/log/sscd
 chown -R sscdserviceuser:sscdserviceuser /var/log/sscd
 
 # install ssc
-sudo -u sscdserviceuser git clone -b v0.1.5 https://github.com/sagaxyz/ssc /tmp/ssc
+sudo -u sscdserviceuser git clone -b $SSC_VERSION https://github.com/sagaxyz/ssc /tmp/ssc
 sudo -u sscdserviceuser PATH=$PATH:/usr/local/go/bin make install -C /tmp/ssc/
 cp /opt/sscd/go/bin/sscd /usr/local/bin/
 sudo -u sscdserviceuser sscd version
@@ -61,13 +64,8 @@ EOF
 # init ssc
 sudo -u sscdserviceuser HOME=/opt/sscd/ sscd init saganode --chain-id ssc-testnet-2
 
-# define seed nodes
-SEED_NODE_EU=testnet2-seed-eu.sagarpc.io
-SEED_NODE_US=testnet2-seed-us.sagarpc.io
-SEED_NODE_KR=testnet2-seed-kr.sagarpc.io
-
 # set seeds
-sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "0cec3c2ba9e3f5d01db08a48efa0b37daab10c88@'$SEED_NODE_EU':26656,1b18cc75bc5933c24c338b1c9979ea8fad967850@'$SEED_NODE_US':26656,51319e6a39735c95a85228684946e68b4f95c87a@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "0cec3c2ba9e3f5d01db08a48efa0b37daab10c88@testnet2-seed-eu.sagarpc.io:26656,1b18cc75bc5933c24c338b1c9979ea8fad967850@testnet2-seed-us.sagarpc.io:26656,51319e6a39735c95a85228684946e68b4f95c87a@testnet2-seed-kr.sagarpc.io:26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/testnet-2/main/genesis/genesis.json'

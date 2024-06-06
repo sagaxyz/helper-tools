@@ -14,8 +14,11 @@ apt upgrade -y
 apt install build-essential make wget git daemon jq python3-pip -y
 pip install yq
 
-wget https://golang.org/dl/go1.22.2.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.22.2.linux-amd64.tar.gz
+GO_VERSION="${GO_VERSION:-1.22.2}"
+SSC_VERSION="${SSC_VERSION:-v0.1.5}"
+
+wget https://golang.org/dl/go$GO_VERSION.linux-amd64.tar.gz
+tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
 # shellcheck disable=SC2016
 # shellcheck disable=SC1091
 echo 'export PATH=$PATH:/usr/local/go/bin' | tee -a /etc/profile
@@ -33,7 +36,7 @@ mkdir -p /var/log/sscd
 chown -R sscdserviceuser:sscdserviceuser /var/log/sscd
 
 # install ssc
-sudo -u sscdserviceuser git clone -b v0.1.5 https://github.com/sagaxyz/ssc /tmp/ssc
+sudo -u sscdserviceuser git clone -b $SSC_VERSION https://github.com/sagaxyz/ssc /tmp/ssc
 sudo -u sscdserviceuser PATH=$PATH:/usr/local/go/bin make install -C /tmp/ssc/
 cp /opt/sscd/go/bin/sscd /usr/local/bin/
 sudo -u sscdserviceuser sscd version
@@ -62,13 +65,8 @@ EOF
 # init ssc
 sudo -u sscdserviceuser HOME=/opt/sscd/ sscd init saganode --chain-id ssc-1
 
-# define seed nodes
-SEED_NODE_EU=ssc-seed-eu.sagarpc.io
-SEED_NODE_US=ssc-seed-us.sagarpc.io
-SEED_NODE_KR=ssc-seed-kr.sagarpc.io
-
 # set seeds
-sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "98a9866c1a0728c117ea7ad579bed739dbb72b47@'$SEED_NODE_EU':26656,a367315c6319d55a9d17dfa13a96c19500bc6a02@'$SEED_NODE_US':26656,0c41e31ae643549107f57d4c9e29f7193f1a36e0@'$SEED_NODE_KR':26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.p2p.seeds = "98a9866c1a0728c117ea7ad579bed739dbb72b47@ssc-seed-eu.sagarpc.io:26656,a367315c6319d55a9d17dfa13a96c19500bc6a02@ssc-seed-us.sagarpc.io:26656,0c41e31ae643549107f57d4c9e29f7193f1a36e0@ssc-seed-kr.sagarpc.io:26656"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
 # get genesis file
 sudo -u sscdserviceuser wget -O /opt/sscd/.ssc/config/genesis.json 'https://raw.githubusercontent.com/sagaxyz/mainnet/main/genesis/genesis.json'
@@ -86,16 +84,11 @@ TRUST_HEIGHT=$((CURRENT_BLOCK - 1000))
 TRUST_BLOCK=$(curl -s $RPC_URL/block\?height=$TRUST_HEIGHT)
 TRUST_HASH=$(echo $TRUST_BLOCK | jq -r '.result.block_id.hash')
 
-# define state sync nodes
-SSYNC_NODE_EU=35.234.68.153
-SSYNC_NODE_US=34.148.184.172
-SSYNC_NODE_KR=34.64.142.18
-
 # configure state sync
 sudo -u sscdserviceuser tomlq -t '.statesync.enable = true' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.trust_height = '$TRUST_HEIGHT'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.trust_hash = '\"$TRUST_HASH\"'' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
-sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://'$SSYNC_NODE_EU':80,tcp://'$SSYNC_NODE_US':80,tcp://'$SSYNC_NODE_KR':80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
+sudo -u sscdserviceuser tomlq -t '.statesync.rpc_servers = "tcp://ssc-statesync-eu.sagarpc.io:80,tcp://ssc-statesync-us.sagarpc.io:80,tcp://ssc-statesync-kr.sagarpc.io:80"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.discovery_time = "30s"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 sudo -u sscdserviceuser tomlq -t '.statesync.chunk_request_timeout = "60s"' /opt/sscd/.ssc/config/config.toml | sudo -u sscdserviceuser tee /opt/sscd/.ssc/config/config.toml.out >/dev/null && sudo -u sscdserviceuser mv /opt/sscd/.ssc/config/config.toml.out /opt/sscd/.ssc/config/config.toml
 
