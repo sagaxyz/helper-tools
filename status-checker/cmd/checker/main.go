@@ -116,7 +116,7 @@ func checkLcdConnectivity(address string) error {
 }
 
 func checkStatusEndpoint(address string) error {
-	address = address + "/status2"
+	address = address + "/status"
 	resp, err := http.Get(address)
 	if err != nil {
 		return fmt.Errorf("error making GET request: %v", err)
