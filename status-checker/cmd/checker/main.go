@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -211,31 +212,42 @@ func grpcLivenessCheck(address string) error {
 }
 
 func main() {
-	println("init http server")
+	// Define the command-line flag
+	network := flag.String("network", "mainnet", "Specify the network to check: mainnet or testnet")
+	flag.Parse()
 
-	endpoints := []Endpoint{
-		{URL: lcdMainnet, Check: checkLcdConnectivity, Path: "/lcd_mainnet"},
-		{URL: lcdTestnet, Check: checkLcdConnectivity, Path: "/lcd_testnet"},
-		{URL: rpcMainnet, Check: checkStatusEndpoint, Path: "/rpc_mainnet"},
-		{URL: rpcTestnet, Check: checkStatusEndpoint, Path: "/rpc_testnet"},
-		{URL: stateSyncEuMainnet, Check: checkStatusEndpoint, Path: "/statesync_eu_mainnet"},
-		{URL: stateSyncUsMainnet, Check: checkStatusEndpoint, Path: "/statesync_us_mainnet"},
-		{URL: stateSyncKrMainnet, Check: checkStatusEndpoint, Path: "/statesync_kr_mainnet"},
-		{URL: stateSyncEuTestnet, Check: checkStatusEndpoint, Path: "/statesync_eu_testnet"},
-		{URL: stateSyncUsTestnet, Check: checkStatusEndpoint, Path: "/statesync_us_testnet"},
-		{URL: stateSyncKrTestnet, Check: checkStatusEndpoint, Path: "/statesync_kr_testnet"},
-		{URL: grpcMainnet, Check: checkGrpcEndpoint, Path: "/grpc_mainnet"},
-		{URL: grpcTestnet, Check: checkGrpcEndpoint, Path: "/grpc_testnet"},
-		{URL: seedEuMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_eu_mainnet"},
-		{URL: seedUsMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_us_mainnet"},
-		{URL: seedKrMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_kr_mainnet"},
-		{URL: seedEuTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_eu_testnet"},
-		{URL: seedUsTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_us_testnet"},
-		{URL: seedKrTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_kr_testnet"},
-		{URL: spcMainnet, Check: checkStatusEndpoint, Path: "/spc_mainnet"},
-		{URL: spcTestnet, Check: checkStatusEndpoint, Path: "/spc_testnet"},
-		{URL: controllerMainnet, Check: grpcLivenessCheck, Path: "/controller_mainnet"},
-		{URL: controllerTestnet, Check: grpcLivenessCheck, Path: "/controller_testnet"},
+	var endpoints []Endpoint
+
+	if *network == "mainnet" {
+		endpoints = []Endpoint{
+			{URL: lcdMainnet, Check: checkLcdConnectivity, Path: "/lcd_mainnet"},
+			{URL: rpcMainnet, Check: checkStatusEndpoint, Path: "/rpc_mainnet"},
+			{URL: stateSyncEuMainnet, Check: checkStatusEndpoint, Path: "/statesync_eu_mainnet"},
+			{URL: stateSyncUsMainnet, Check: checkStatusEndpoint, Path: "/statesync_us_mainnet"},
+			{URL: stateSyncKrMainnet, Check: checkStatusEndpoint, Path: "/statesync_kr_mainnet"},
+			{URL: grpcMainnet, Check: checkGrpcEndpoint, Path: "/grpc_mainnet"},
+			{URL: seedEuMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_eu_mainnet"},
+			{URL: seedUsMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_us_mainnet"},
+			{URL: seedKrMainnet, Check: checkSeedNodeConnectivity, Path: "/seed_kr_mainnet"},
+			{URL: spcMainnet, Check: checkStatusEndpoint, Path: "/spc_mainnet"},
+			{URL: controllerMainnet, Check: grpcLivenessCheck, Path: "/controller_mainnet"},
+		}
+	} else if *network == "testnet" {
+		endpoints = []Endpoint{
+			{URL: lcdTestnet, Check: checkLcdConnectivity, Path: "/lcd_testnet"},
+			{URL: rpcTestnet, Check: checkStatusEndpoint, Path: "/rpc_testnet"},
+			{URL: stateSyncEuTestnet, Check: checkStatusEndpoint, Path: "/statesync_eu_testnet"},
+			{URL: stateSyncUsTestnet, Check: checkStatusEndpoint, Path: "/statesync_us_testnet"},
+			{URL: stateSyncKrTestnet, Check: checkStatusEndpoint, Path: "/statesync_kr_testnet"},
+			{URL: grpcTestnet, Check: checkGrpcEndpoint, Path: "/grpc_testnet"},
+			{URL: seedEuTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_eu_testnet"},
+			{URL: seedUsTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_us_testnet"},
+			{URL: seedKrTestnet, Check: checkSeedNodeConnectivity, Path: "/seed_kr_testnet"},
+			{URL: spcTestnet, Check: checkStatusEndpoint, Path: "/spc_testnet"},
+			{URL: controllerTestnet, Check: grpcLivenessCheck, Path: "/controller_testnet"},
+		}
+	} else {
+		panic(fmt.Sprintf("Unknown network: %s", *network))
 	}
 
 	for _, endpoint := range endpoints {
@@ -249,6 +261,8 @@ func main() {
 			}
 		})
 	}
+
+	println("init http server")
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Printf("HTTP server failed: %v\n", err)
