@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -71,7 +71,7 @@ func checkSeedNodeConnectivity(address string) error {
 }
 
 func checkLcdConnectivity(address string) error {
-	address = address + "/cosmos/consensus/v1/params"
+	address = address + "/cosmos/base/tendermint/v1beta1/blocks/latest"
 	resp, err := http.Get(address)
 	if err != nil {
 		return fmt.Errorf("error making GET request: %v", err)
@@ -88,29 +88,29 @@ func checkLcdConnectivity(address string) error {
 	}
 
 	// Access nested fields in the JSON response
-	params, ok := result["params"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("error parsing params field")
-	}
-
-	block, ok := params["block"].(map[string]interface{})
+	block, ok := result["block"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("error parsing block field")
 	}
 
-	// Check max_bytes value
-	maxBytesStr, ok := block["max_bytes"].(string)
+	header, ok := block["header"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("error parsing max_bytes field")
+		return fmt.Errorf("error parsing header field")
 	}
 
-	maxBytes, err := strconv.ParseInt(maxBytesStr, 10, 64)
+	// Check height value
+	heightStr, ok := header["height"].(string)
+	if !ok {
+		return fmt.Errorf("error parsing height field")
+	}
+
+	height, err := strconv.ParseInt(heightStr, 10, 64)
 	if err != nil {
-		return fmt.Errorf("max_bytes is not an integer number: %v", err)
+		return fmt.Errorf("height is not an integer number: %v", err)
 	}
 
-	if maxBytes <= 0 {
-		return fmt.Errorf("max_bytes is non-positive: %d", maxBytes)
+	if height <= 0 {
+		return fmt.Errorf("height is non-positive: %d", height)
 	}
 
 	return nil
@@ -164,28 +164,26 @@ func checkGrpcEndpoint(address string) error {
 	}
 	defer conn.Close()
 
-	// Create a client for the gRPC service.
-	client := types.NewQueryClient(conn)
-
 	// Create a context with a timeout.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// Make a request to the gRPC server.
-	req := &types.QueryParamsRequest{}
-	resp, err := client.Params(ctx, req)
+	client := types.NewQueryClient(conn)
+	req := &types.QuerySupplyOfRequest{Denom: "usaga"}
+	resp, err := client.SupplyOf(ctx, req)
+
 	if err != nil {
 		return fmt.Errorf("could not query: %v", err)
 	}
 
-	// Check max_bytes value
-	maxBytes, err := strconv.ParseInt(strconv.FormatInt(resp.Params.Block.MaxBytes, 10), 10, 64)
+	// Check amount value
+	amount, err := strconv.ParseInt(strconv.FormatInt(resp.Amount.Amount.Int64(), 10), 10, 64)
 	if err != nil {
-		return fmt.Errorf("error converting max_bytes to integer: %v", err)
+		return fmt.Errorf("error converting amount to integer: %v", err)
 	}
 
-	if maxBytes <= 0 {
-		return fmt.Errorf("max_bytes is non-positive: %d", maxBytes)
+	if amount <= 0 {
+		return fmt.Errorf("amount is non-positive: %d", amount)
 	}
 
 	return nil
