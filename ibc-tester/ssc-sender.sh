@@ -120,8 +120,6 @@ do_transfers() {
   done
 }
 
-do_transfers &
-
 function calc_content_length() {
   # shellcheck disable=SC2000
   printf "%s" "$(echo "$1" | wc -c)"
@@ -159,6 +157,8 @@ function handleRequest() {
     gen_404_response >response
   fi
 }
+
+do_transfers &
 
 rm -f response
 mkfifo response
