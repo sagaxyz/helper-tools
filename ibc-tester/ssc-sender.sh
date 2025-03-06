@@ -30,28 +30,28 @@ fi
 # import keys
 # if keys are already imported, just continue
 if ! sscd keys show sscdkey -a; then
-  if ! sscd keys add sscdkey --recover <<< "$SSC_MNEMONIC"; then
+  if ! sscd keys add sscdkey --recover <<<"$SSC_MNEMONIC"; then
     echo "Failed to import SSC key"
     exit 1
   fi
 fi
 if ! sagaosd keys show hubkey -a; then
-  if ! sagaosd keys add hubkey --recover <<< "$HUB_MNEMONIC"; then
+  if ! sagaosd keys add hubkey --recover <<<"$HUB_MNEMONIC"; then
     echo "Failed to import hub key"
     exit 1
   fi
 fi
- 
+
 # get the imported key addresses
 SSC_ADDRESS=$(sscd keys show sscdkey -a)
 HUB_ADDRESS=$(sagaosd keys show hubkey -a)
 
 # sscd and sagaosd binaries must be installed
-if ! command -v sscd &> /dev/null; then
+if ! command -v sscd &>/dev/null; then
   echo "sscd not found"
   exit 1
 fi
-if ! command -v sagaosd &> /dev/null; then
+if ! command -v sagaosd &>/dev/null; then
   echo "sagaosd not found"
   exit 1
 fi
@@ -60,11 +60,11 @@ PORT=8080
 METRICS_FILE="/tmp/metrics.log"
 
 # Initialize the metrics file
-echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"success\"} 0" > "$METRICS_FILE"
+echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"success\"} 0" >"$METRICS_FILE"
 # shellcheck disable=SC2129
-echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"failure\"} 0" >> "$METRICS_FILE"
-echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"success\"} 0" >> "$METRICS_FILE"
-echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"failure\"} 0" >> "$METRICS_FILE"
+echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
+echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"success\"} 0" >>"$METRICS_FILE"
+echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
 
 # IBC send loop
 do_transfers() {
@@ -89,10 +89,10 @@ do_transfers() {
     # updated balance should be equal to the previous balance + 1
     if [ "$updated_hub_balance" -ne $((hub_balance + 1)) ]; then
       ssc_failure_counter=$((ssc_failure_counter + 1))
-    else  
+    else
       ssc_success_counter=$((ssc_success_counter + 1))
     fi
-    
+
     # repeat the same for the opposite direction
     ssc_balance=$(sscd q bank balances $SSC_ADDRESS --node $SSC_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$SSC_DENOM\"') | .amount')
     if [ -z "$ssc_balance" ]; then
@@ -108,15 +108,15 @@ do_transfers() {
     echo "ssc balance after transfer: $updated_ssc_balance"
     if [ "$updated_ssc_balance" -ne $((ssc_balance + 1)) ]; then
       hub_failure_counter=$((hub_failure_counter + 1))
-    else  
+    else
       hub_success_counter=$((hub_success_counter + 1))
     fi
     # Update the metrics file counters
-    echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"success\"} $ssc_success_counter" > "$METRICS_FILE"
+    echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"success\"} $ssc_success_counter" >"$METRICS_FILE"
     # shellcheck disable=SC2129
-    echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"failure\"} $ssc_failure_counter" >> "$METRICS_FILE"
-    echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"success\"} $hub_success_counter" >> "$METRICS_FILE"
-    echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"failure\"} $hub_failure_counter" >> "$METRICS_FILE"
+    echo "ibc_transfer_exporter{scr_chain=\"$SSC_CHAIN_ID\", dst_chain=\"$HUB_CHAIN_ID\", status=\"failure\"} $ssc_failure_counter" >>"$METRICS_FILE"
+    echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"success\"} $hub_success_counter" >>"$METRICS_FILE"
+    echo "ibc_transfer_exporter{scr_chain=\"$HUB_CHAIN_ID\", dst_chain=\"$SSC_CHAIN_ID\", status=\"failure\"} $hub_failure_counter" >>"$METRICS_FILE"
   done
 }
 
@@ -154,9 +154,9 @@ function handleRequest() {
   read -r request_line
   if [[ "$request_line" =~ ^GET\ /metrics\  ]]; then
     body=$(cat "$METRICS_FILE")
-    gen_response "$body" > response
+    gen_response "$body" >response
   else
-    gen_404_response > response
+    gen_404_response >response
   fi
 }
 
