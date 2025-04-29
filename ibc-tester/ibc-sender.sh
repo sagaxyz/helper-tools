@@ -12,11 +12,18 @@ CHAIN_B_ENDPOINT="${CHAIN_B_ENDPOINT:-https://hub-5464111-1-cosmosrpc.jsonrpc.sa
 CHAIN_A_DENOM="${CHAIN_A_DENOM:-usaga}"
 CHAIN_B_IBC_DENOM="${CHAIN_B_IBC_DENOM:-ibc/FBDE0DA1907EC8B475C5DBC3FD8F794AE13919343B96D5DAF7245A2BC6196EA5}"
 CHAIN_B_NATIVE_DENOM="${CHAIN_B_NATIVE_DENOM:-lilc}"
+CHAIN_A_FEE_AMOUNT="${CHAIN_A_FEE_AMOUNT:-1500}"
+CHAIN_B_FEE_AMOUNT="${CHAIN_B_FEE_AMOUNT:-20}"
 CHAIN_A_BINARY="${CHAIN_A_BINARY:-sscd}"
 CHAIN_B_BINARY="${CHAIN_B_BINARY:-sagaosd}"
 
 TX_DELAY="${TX_DELAY:-180}"
-KEYPASSWD="${KEYPASSWD:-1234567890}"
+
+# Keystore password must be set
+if [ -z "$KEYPASSWD" ]; then
+  echo "KEYPASSWD is not set"
+  exit 1
+fi
 
 # Chain A mnemonic must be set
 if [ -z "$CHAIN_A_MNEMONIC" ]; then
@@ -76,7 +83,7 @@ do_transfers() {
       chain_b_balance=0
     fi
     echo "chain b balance: $chain_b_balance"
-    echo "$KEYPASSWD" | $CHAIN_A_BINARY tx ibc-transfer transfer transfer $CHAIN_A_TO_B_CHANNEL $CHAIN_B_ADDRESS 1$CHAIN_A_DENOM --from chainakey --chain-id $CHAIN_A_ID --fees 1500$CHAIN_A_DENOM --node $CHAIN_A_ENDPOINT -y
+    echo "$KEYPASSWD" | $CHAIN_A_BINARY tx ibc-transfer transfer transfer $CHAIN_A_TO_B_CHANNEL $CHAIN_B_ADDRESS 1$CHAIN_A_DENOM --from chainakey --chain-id $CHAIN_A_ID --fees $CHAIN_A_FEE_AMOUNT$CHAIN_A_DENOM --node $CHAIN_A_ENDPOINT -y
     sleep $TX_DELAY
     updated_chain_b_balance=$($CHAIN_B_BINARY q bank balances $CHAIN_B_ADDRESS --node $CHAIN_B_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_B_IBC_DENOM\"') | .amount')
     if [ -z "$updated_chain_b_balance" ]; then
@@ -96,7 +103,7 @@ do_transfers() {
       chain_a_balance=0
     fi
     echo "chain a balance: $chain_a_balance"
-    echo "$KEYPASSWD" | $CHAIN_B_BINARY tx ibc-transfer transfer transfer $CHAIN_B_TO_A_CHANNEL $CHAIN_A_ADDRESS 1$CHAIN_B_IBC_DENOM --from chainbkey --chain-id $CHAIN_B_ID --fees 20$CHAIN_B_NATIVE_DENOM --node $CHAIN_B_ENDPOINT -y
+    echo "$KEYPASSWD" | $CHAIN_B_BINARY tx ibc-transfer transfer transfer $CHAIN_B_TO_A_CHANNEL $CHAIN_A_ADDRESS 1$CHAIN_B_IBC_DENOM --from chainbkey --chain-id $CHAIN_B_ID --fees $CHAIN_B_FEE_AMOUNT$CHAIN_B_NATIVE_DENOM --node $CHAIN_B_ENDPOINT -y
     sleep $TX_DELAY
     updated_chain_a_balance=$($CHAIN_A_BINARY q bank balances $CHAIN_A_ADDRESS --node $CHAIN_A_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_A_DENOM\"') | .amount')
     if [ -z "$updated_chain_a_balance" ]; then
