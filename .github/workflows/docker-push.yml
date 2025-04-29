@@ -1,9 +1,9 @@
 name: Build and Push to DockerHub
 
 on:
-  push
-    # tags:
-    #   - "v*.*.*"
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   docker:
@@ -38,5 +38,4 @@ jobs:
           file: ./ibc-tester/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          # tags: sagaxyz/ibc-tester:${{ steps.meta.outputs.tag }}, sagaxyz/ibc-tester:latest
-          tags: sagaxyz/ibc-tester:0.0.1, sagaxyz/ibc-tester:latest
+          tags: sagaxyz/ibc-tester:${{ steps.meta.outputs.tag }}, sagaxyz/ibc-tester:latest
