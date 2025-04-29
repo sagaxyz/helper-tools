@@ -37,11 +37,23 @@ if [ -z "$CHAIN_B_MNEMONIC" ]; then
   exit 1
 fi
 
-if ! (echo "$CHAIN_A_MNEMONIC"; sleep 1; echo $KEYPASSWD; sleep 1; echo $KEYPASSWD) | $CHAIN_A_BINARY keys add chainakey --recover; then
+if ! (
+  echo "$CHAIN_A_MNEMONIC"
+  sleep 1
+  echo $KEYPASSWD
+  sleep 1
+  echo $KEYPASSWD
+) | $CHAIN_A_BINARY keys add chainakey --recover; then
   echo "Failed to import Chain A key"
   exit 1
 fi
-if ! (echo "$CHAIN_B_MNEMONIC"; sleep 1; echo $KEYPASSWD; sleep 1; echo $KEYPASSWD) | $CHAIN_B_BINARY keys add chainbkey --recover; then
+if ! (
+  echo "$CHAIN_B_MNEMONIC"
+  sleep 1
+  echo $KEYPASSWD
+  sleep 1
+  echo $KEYPASSWD
+) | $CHAIN_B_BINARY keys add chainbkey --recover; then
   echo "Failed to import Chain B key"
   exit 1
 fi
