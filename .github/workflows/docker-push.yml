@@ -19,7 +19,7 @@ jobs:
       - name: Get Github tag
         id: meta
         run: |
-          echo "::set-output name=tag::$(echo ${{github.ref_name}} | sed -e 's/^v//')"
+          echo "tag=$(echo ${{github.ref_name}} | sed -e 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
