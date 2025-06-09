@@ -10,8 +10,9 @@ CHAIN_B_ID="${CHAIN_B_ID:-hub-5464111-1}"
 CHAIN_A_ENDPOINT="${CHAIN_A_ENDPOINT:-https://ssc-rpc.sagarpc.io:443}"
 CHAIN_B_ENDPOINT="${CHAIN_B_ENDPOINT:-https://hub-5464111-1-cosmosrpc.jsonrpc.sagarpc.io:443}"
 CHAIN_A_DENOM="${CHAIN_A_DENOM:-usaga}"
+CHAIN_A_IBC_DENOM="${CHAIN_A_IBC_DENOM:-ibc/572DE11CD97E8AE475A6D7F4DF05AEC459E68873018B8D5D9667F88C8E599E1E}"
+CHAIN_B_DENOM="${CHAIN_B_DENOM:-lilc}"
 CHAIN_B_IBC_DENOM="${CHAIN_B_IBC_DENOM:-ibc/FBDE0DA1907EC8B475C5DBC3FD8F794AE13919343B96D5DAF7245A2BC6196EA5}"
-CHAIN_B_NATIVE_DENOM="${CHAIN_B_NATIVE_DENOM:-lilc}"
 CHAIN_A_FEE_AMOUNT="${CHAIN_A_FEE_AMOUNT:-1500}"
 CHAIN_B_FEE_AMOUNT="${CHAIN_B_FEE_AMOUNT:-20}"
 CHAIN_A_BINARY="${CHAIN_A_BINARY:-sscd}"
@@ -62,6 +63,15 @@ fi
 CHAIN_A_ADDRESS=$(echo "$KEYPASSWD" | $CHAIN_A_BINARY keys show chainakey -a)
 CHAIN_B_ADDRESS=$(echo "$KEYPASSWD" | $CHAIN_B_BINARY keys show chainbkey -a)
 
+if [ -z "$CHAIN_A_ADDRESS" ]; then
+  echo "Failed to get Chain A address"
+  exit 1
+fi
+if [ -z "$CHAIN_B_ADDRESS" ]; then
+  echo "Failed to get Chain B address"
+  exit 1
+fi
+
 # Chain binaries must be installed
 if ! command -v $CHAIN_A_BINARY &>/dev/null; then
   echo "$CHAIN_A_BINARY not found"
@@ -110,14 +120,14 @@ do_transfers() {
     fi
 
     # repeat the same for the opposite direction
-    chain_a_balance=$($CHAIN_A_BINARY q bank balances $CHAIN_A_ADDRESS --node $CHAIN_A_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_A_DENOM\"') | .amount')
+    chain_a_balance=$($CHAIN_A_BINARY q bank balances $CHAIN_A_ADDRESS --node $CHAIN_A_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_A_IBC_DENOM\"') | .amount')
     if [ -z "$chain_a_balance" ]; then
       chain_a_balance=0
     fi
     echo "chain a balance: $chain_a_balance"
-    echo "$KEYPASSWD" | $CHAIN_B_BINARY tx ibc-transfer transfer transfer $CHAIN_B_TO_A_CHANNEL $CHAIN_A_ADDRESS 1$CHAIN_B_IBC_DENOM --from chainbkey --chain-id $CHAIN_B_ID --fees $CHAIN_B_FEE_AMOUNT$CHAIN_B_NATIVE_DENOM --node $CHAIN_B_ENDPOINT -y
+    echo "$KEYPASSWD" | $CHAIN_B_BINARY tx ibc-transfer transfer transfer $CHAIN_B_TO_A_CHANNEL $CHAIN_A_ADDRESS 1$CHAIN_B_DENOM --from chainbkey --chain-id $CHAIN_B_ID --fees $CHAIN_B_FEE_AMOUNT$CHAIN_B_DENOM --node $CHAIN_B_ENDPOINT -y
     sleep $TX_DELAY
-    updated_chain_a_balance=$($CHAIN_A_BINARY q bank balances $CHAIN_A_ADDRESS --node $CHAIN_A_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_A_DENOM\"') | .amount')
+    updated_chain_a_balance=$($CHAIN_A_BINARY q bank balances $CHAIN_A_ADDRESS --node $CHAIN_A_ENDPOINT --output json | jq -r '.balances[] | select(.denom == '\"$CHAIN_A_IBC_DENOM\"') | .amount')
     if [ -z "$updated_chain_a_balance" ]; then
       updated_chain_a_balance=0
     fi
