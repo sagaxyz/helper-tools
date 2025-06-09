@@ -86,11 +86,11 @@ PORT=8080
 METRICS_FILE="/tmp/metrics.log"
 
 # Initialize the metrics file
-echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"success\"} 0" >"$METRICS_FILE"
+echo "ibc_transfer_exporter{src_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"success\"} 0" >"$METRICS_FILE"
 # shellcheck disable=SC2129
-echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
-echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"success\"} 0" >>"$METRICS_FILE"
-echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
+echo "ibc_transfer_exporter{src_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
+echo "ibc_transfer_exporter{src_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"success\"} 0" >>"$METRICS_FILE"
+echo "ibc_transfer_exporter{src_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"failure\"} 0" >>"$METRICS_FILE"
 
 # IBC send loop
 do_transfers() {
@@ -138,11 +138,11 @@ do_transfers() {
       chain_b_success_counter=$((chain_b_success_counter + 1))
     fi
     # Update the metrics file counters
-    echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"success\"} $chain_a_success_counter" >"$METRICS_FILE"
+    echo "ibc_transfer_exporter{src_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"success\"} $chain_a_success_counter" >"$METRICS_FILE"
     # shellcheck disable=SC2129
-    echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"failure\"} $chain_a_failure_counter" >>"$METRICS_FILE"
-    echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"success\"} $chain_b_success_counter" >>"$METRICS_FILE"
-    echo "ibc_transfer_exporter{scr_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"failure\"} $chain_b_failure_counter" >>"$METRICS_FILE"
+    echo "ibc_transfer_exporter{src_chain=\"$CHAIN_A_ID\", dst_chain=\"$CHAIN_B_ID\", status=\"failure\"} $chain_a_failure_counter" >>"$METRICS_FILE"
+    echo "ibc_transfer_exporter{src_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"success\"} $chain_b_success_counter" >>"$METRICS_FILE"
+    echo "ibc_transfer_exporter{src_chain=\"$CHAIN_B_ID\", dst_chain=\"$CHAIN_A_ID\", status=\"failure\"} $chain_b_failure_counter" >>"$METRICS_FILE"
   done
 }
 
